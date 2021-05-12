@@ -40,6 +40,7 @@ import { addressBookQueryParamsSelector, safesListSelector } from 'src/logic/saf
 import { checksumAddress } from 'src/utils/checksumAddress'
 import { grantedSelector } from 'src/routes/safe/container/selector'
 import { useAnalytics, SAFE_NAVIGATION_EVENT } from 'src/utils/googleAnalytics'
+import ImportEntryModal from './ImportEntryModal'
 
 const StyledButton = styled(Button)`
   &&.MuiButton-root {
@@ -76,6 +77,7 @@ const AddressBookTable = (): ReactElement => {
   const granted = useSelector(grantedSelector)
   const [selectedEntry, setSelectedEntry] = useState<Entry>(initialEntryState)
   const [editCreateEntryModalOpen, setEditCreateEntryModalOpen] = useState(false)
+  const [importEntryModalOpen, setImportEntryModalOpen] = useState(false)
   const [deleteEntryModalOpen, setDeleteEntryModalOpen] = useState(false)
   const [sendFundsModalOpen, setSendFundsModalOpen] = useState(false)
   const { trackEvent } = useAnalytics()
@@ -137,6 +139,17 @@ const AddressBookTable = (): ReactElement => {
     dispatch(removeAddressBookEntry(entryAddress))
   }
 
+  const importEntryModalHandler = (addressList: AddressBookEntry[]) => {
+    addressList.forEach((entry) => {
+      const checksumEntries = {
+        ...entry,
+        address: checksumAddress(entry.address),
+      }
+      dispatch(addAddressBookEntry(makeAddressBookEntry(checksumEntries)))
+    })
+    setImportEntryModalOpen(false)
+  }
+
   return (
     <>
       <Row align="center" className={classes.message}>
@@ -155,8 +168,7 @@ const AddressBookTable = (): ReactElement => {
           </ButtonLink>
           <ButtonLink
             onClick={() => {
-              setSelectedEntry(initialEntryState)
-              setEditCreateEntryModalOpen(true)
+              setImportEntryModalOpen(true)
             }}
             color="primary"
             iconType="importImg"
@@ -282,6 +294,11 @@ const AddressBookTable = (): ReactElement => {
         entryToDelete={selectedEntry}
         isOpen={deleteEntryModalOpen}
         onClose={() => setDeleteEntryModalOpen(false)}
+      />
+      <ImportEntryModal
+        importEntryModalHandler={importEntryModalHandler}
+        isOpen={importEntryModalOpen}
+        onClose={() => setImportEntryModalOpen(false)}
       />
       <SendModal
         activeScreenType="chooseTxType"
